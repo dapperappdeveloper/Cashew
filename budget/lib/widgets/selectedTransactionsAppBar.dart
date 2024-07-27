@@ -77,11 +77,7 @@ class SelectedTransactionsAppBar extends StatelessWidget {
         customSnackbarDescription: "transaction-details".tr(),
       );
     } else {
-      final box = context.findRenderObject() as RenderBox?;
-      await Share.share(
-        outString,
-        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
-      );
+      shareToClipboard(outString, context: context);
     }
   }
 
@@ -184,7 +180,7 @@ class SelectedTransactionsAppBar extends StatelessWidget {
                                                       " " +
                                                       "selected".tr(),
                                               fontSize: 17.5,
-                                              textAlign: TextAlign.left,
+                                              textAlign: TextAlign.start,
                                               maxLines: 1,
                                               overflow: TextOverflow.fade,
                                               softWrap: false,
@@ -231,7 +227,7 @@ class SelectedTransactionsAppBar extends StatelessWidget {
                                                     ? snapshot.data!
                                                     : 0),
                                             fontSize: 17.5,
-                                            textAlign: TextAlign.left,
+                                            textAlign: TextAlign.start,
                                             maxLines: 1,
                                           ),
                                         ),

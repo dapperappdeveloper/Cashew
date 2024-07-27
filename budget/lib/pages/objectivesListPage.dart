@@ -398,7 +398,7 @@ class ObjectiveContainer extends StatelessWidget {
             : 20;
     Color containerColor =
         getPlatform() == PlatformOS.isIOS && forceAndroidBubbleDesign == false
-            ? Theme.of(context).canvasColor
+            ? Theme.of(context).colorScheme.background
             : getColor(context, "lightDarkAccentHeavyLight");
     EdgeInsetsDirectional containerPadding = EdgeInsetsDirectional.only(
       start:
@@ -561,7 +561,7 @@ class ObjectiveContainer extends StatelessWidget {
                                               const EdgeInsetsDirectional.only(
                                                   bottom: 2),
                                           child: TextFont(
-                                            textAlign: TextAlign.left,
+                                            textAlign: TextAlign.start,
                                             text: (objective.type ==
                                                     ObjectiveType.loan
                                                 ? (objective.income
@@ -783,7 +783,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
         : 20;
     Color containerColor =
         getPlatform() == PlatformOS.isIOS && forceAndroidBubbleDesign == false
-            ? Theme.of(context).canvasColor
+            ? Theme.of(context).colorScheme.background
             : getColor(context, "lightDarkAccentHeavyLight");
     Widget child = WatchTotalAndAmountOfObjective(
       objective: objective,
@@ -875,7 +875,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                                       int numberTransactions =
                                           snapshot.data ?? 0;
                                       return TextFont(
-                                        textAlign: TextAlign.left,
+                                        textAlign: TextAlign.start,
                                         text: numberTransactions.toString() +
                                             " " +
                                             (numberTransactions == 1
@@ -927,7 +927,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                             padding:
                                 const EdgeInsetsDirectional.only(bottom: 2),
                             child: TextFont(
-                              textAlign: TextAlign.right,
+                              textAlign: TextAlign.end,
                               text: percentageTowardsGoal == 1
                                   ? "settled".tr().capitalizeFirst
                                   : (getDifferenceOfLoan(objective, totalAmount,

@@ -215,14 +215,19 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                         amountLight: 0.55,
                         amountDark: 0.35);
                     return EditRowEntry(
-                      extraIcon: appStateSettings["selectedWalletPk"] ==
+                      extraIcon: Provider.of<SelectedWalletPk>(context)
+                                  .selectedWalletPk ==
                               wallet.walletPk
                           ? appStateSettings["outlinedIcons"]
                               ? Icons.star_outlined
                               : Icons.star_rounded
                           : Icons.star_outline,
                       onExtra: () async {
-                        setPrimaryWallet(wallet.walletPk);
+                        setPrimaryWallet(
+                          wallet.walletPk,
+                          allWallets:
+                              Provider.of<AllWallets>(context, listen: false),
+                        );
                       },
                       canDelete: (wallet.walletPk != "0"),
                       canReorder: searchValue == "" &&
@@ -241,7 +246,7 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                           ),
                           Container(height: 2),
                           TextFont(
-                            textAlign: TextAlign.left,
+                            textAlign: TextAlign.start,
                             text: convertToMoney(
                               Provider.of<AllWallets>(context),
                               walletWithDetails.totalSpent ?? 0,
@@ -255,7 +260,8 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               AnimatedSizeSwitcher(
-                                child: appStateSettings["selectedWalletPk"] ==
+                                child: Provider.of<SelectedWalletPk>(context)
+                                            .selectedWalletPk ==
                                         wallet.walletPk
                                     ? Padding(
                                         padding:
@@ -275,7 +281,7 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                                     : Container(),
                               ),
                               TextFont(
-                                textAlign: TextAlign.left,
+                                textAlign: TextAlign.start,
                                 text: walletWithDetails.numberTransactions
                                         .toString() +
                                     " " +

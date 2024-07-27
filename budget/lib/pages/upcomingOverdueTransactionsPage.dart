@@ -98,8 +98,8 @@ class UpcomingOverdueTransactionsState
                 id: "settings",
                 label: "settings".tr(),
                 icon: appStateSettings["outlinedIcons"]
-                    ? Icons.settings_outlined
-                    : Icons.settings_rounded,
+                    ? Icons.more_vert_outlined
+                    : Icons.more_vert_rounded,
                 action: () {
                   openBottomSheet(
                       context,
@@ -289,6 +289,10 @@ class UpcomingOverdueTransactionsState
                             transaction: item,
                             listID: pageId,
                           ),
+                          if (index == (snapshot.data?.length ?? 0) - 1)
+                            HorizontalBreak(
+                                padding: EdgeInsetsDirectional.only(
+                                    top: 4, bottom: 6)),
                         ],
                       ),
                     );

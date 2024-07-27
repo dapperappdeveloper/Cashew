@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:budget/functions.dart';
 import 'package:budget/struct/settings.dart';
+import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/onAppResume.dart';
 import 'package:flutter/foundation.dart';
@@ -13,8 +14,8 @@ FocusNode? _currentTextInputFocus;
 bool shouldAutoRefocus = false;
 
 void minimizeKeyboard(BuildContext context) {
-  FocusScopeNode currentFocus = FocusScope.of(context);
-  currentFocus.unfocus();
+  FocusNode? currentFocus = WidgetsBinding.instance.focusManager.primaryFocus;
+  currentFocus?.unfocus();
   Future.delayed(Duration(milliseconds: 10), () {
     shouldAutoRefocus = false;
   });
@@ -156,6 +157,11 @@ class TextInput extends StatelessWidget {
           ),
           child: Center(
             child: TextFormField(
+              onTapOutside: (event) {
+                Widget? popupFramework =
+                    context.findAncestorWidgetOfExactType<PopupFramework>();
+                if (popupFramework == null) minimizeKeyboard(context);
+              },
               scrollController: scrollController,
               maxLength: maxLength,
               inputFormatters: inputFormatters,

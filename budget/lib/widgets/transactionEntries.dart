@@ -604,6 +604,10 @@ class _TransactionEntriesState extends State<TransactionEntries> {
                 income: totalIncome,
                 expense: totalExpense,
                 onLongPress: widget.onLongPressSpendingSummary,
+                dateTimeRange: widget.startDay != null && widget.endDay != null
+                    ? DateTimeRange(
+                        start: widget.startDay!, end: widget.endDay!)
+                    : null,
               ),
             );
 
@@ -683,7 +687,8 @@ class _TransactionEntriesState extends State<TransactionEntries> {
               for (int i = 0; i < 5 + random.nextInt(5); i++)
                 GhostTransactions(
                   i: random.nextInt(100),
-                  useHorizontalPaddingConstrained: true,
+                  useHorizontalPaddingConstrained:
+                      widget.useHorizontalPaddingConstrained,
                 ),
             ],
           );
@@ -809,7 +814,7 @@ class PastTransactionsDivider extends StatelessWidget {
                           child: TextFont(
                             text: "past-transactions".tr(),
                             maxLines: 1,
-                            textAlign: TextAlign.left,
+                            textAlign: TextAlign.start,
                             fontSize: 15,
                           ),
                         ),
@@ -870,7 +875,7 @@ class FutureTransactionsDivider extends StatelessWidget {
                               child: TextFont(
                                 text: "future-transactions".tr(),
                                 maxLines: 1,
-                                textAlign: TextAlign.left,
+                                textAlign: TextAlign.start,
                                 fontSize: 15,
                               ),
                             ),
@@ -905,7 +910,7 @@ class FutureTransactionsDivider extends StatelessWidget {
                                                 addCommaWithExtraText: false,
                                               ),
                                               maxLines: 1,
-                                              textAlign: TextAlign.left,
+                                              textAlign: TextAlign.start,
                                               fontSize: 14,
                                               textColor:
                                                   getColor(context, "black"),
@@ -918,7 +923,7 @@ class FutureTransactionsDivider extends StatelessWidget {
                                                 addCommaWithExtraText: false,
                                               ),
                                               maxLines: 1,
-                                              textAlign: TextAlign.left,
+                                              textAlign: TextAlign.start,
                                               fontSize: 14,
                                               textColor: getColor(
                                                   context, "textLight"),
@@ -1002,6 +1007,7 @@ class TransactionsEntriesSpendingSummary extends StatelessWidget {
     required this.netSpending,
     required this.income,
     required this.expense,
+    required this.dateTimeRange,
     this.onLongPress,
     super.key,
   });
@@ -1010,6 +1016,7 @@ class TransactionsEntriesSpendingSummary extends StatelessWidget {
   final double netSpending;
   final double income;
   final double expense;
+  final DateTimeRange? dateTimeRange;
   final VoidCallback? onLongPress;
 
   @override
@@ -1025,7 +1032,12 @@ class TransactionsEntriesSpendingSummary extends StatelessWidget {
         ),
         child: OpenContainerNavigation(
           borderRadius: borderRadius,
-          openPage: WalletDetailsPage(wallet: null),
+          openPage: WalletDetailsPage(
+            wallet: null,
+            initialSearchFilters: SearchFilters(
+              dateTimeRange: dateTimeRange,
+            ),
+          ),
           button: (openContainer) {
             return Tappable(
               borderRadius: borderRadius,

@@ -18,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import './colors.dart';
 import 'package:flutter/material.dart';
@@ -1244,6 +1245,19 @@ void copyToClipboard(String text,
     );
 }
 
+Future shareToClipboard(String text, {required BuildContext context}) async {
+  try {
+    final box = context.findRenderObject() as RenderBox?;
+    await Share.share(
+      text,
+      sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+    );
+  } catch (e) {
+    print("There was an error sharing: " + e.toString());
+    copyToClipboard(text);
+  }
+}
+
 Future<String?> readClipboard({bool showSnackbar = true}) async {
   HapticFeedback.mediumImpact();
   final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
@@ -1259,6 +1273,35 @@ Future<String?> readClipboard({bool showSnackbar = true}) async {
       ),
     );
   return clipboardText;
+}
+
+Future<double?> readAmountFromClipboard({bool showSnackbar = true}) async {
+  String? clipboardText = await readClipboard(showSnackbar: false);
+  double? amount = getAmountFromString(clipboardText ?? "");
+  if (showSnackbar) {
+    if (amount != null) {
+      openSnackbar(
+        SnackbarMessage(
+          title: "pasted-from-clipboard".tr(),
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.paste_outlined
+              : Icons.paste_rounded,
+          timeout: Duration(milliseconds: 2500),
+        ),
+      );
+    } else {
+      openSnackbar(
+        SnackbarMessage(
+          title: "clipboard-error".tr(),
+          description: "no-value".tr(),
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.assignment_late_outlined
+              : Icons.assignment_late_rounded,
+        ),
+      );
+    }
+  }
+  return amount;
 }
 
 double? getAmountFromString(String inputString) {

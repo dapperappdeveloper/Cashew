@@ -482,17 +482,18 @@ class _BudgetHistoryLineGraphState extends State<_BudgetHistoryLineGraph> {
             },
             touchTooltipData: LineTouchTooltipData(
               maxContentWidth: 170,
-              tooltipBgColor: widget.extraCategorySpots.keys.length <= 0 &&
-                      (widget.lineColors == null ||
-                          (widget.lineColors?.length ?? 0) <= 0)
-                  ? widget.color.withOpacity(0.7)
-                  : dynamicPastel(
-                      context,
-                      getColor(context, "white"),
-                      inverse: true,
-                      amountLight: 0.2,
-                      amountDark: 0.05,
-                    ).withOpacity(0.8),
+              getTooltipColor: (_) =>
+                  widget.extraCategorySpots.keys.length <= 0 &&
+                          (widget.lineColors == null ||
+                              (widget.lineColors?.length ?? 0) <= 0)
+                      ? widget.color.withOpacity(0.7)
+                      : dynamicPastel(
+                          context,
+                          getColor(context, "white"),
+                          inverse: true,
+                          amountLight: 0.2,
+                          amountDark: 0.05,
+                        ).withOpacity(0.8),
               tooltipRoundedRadius: 8,
               fitInsideVertically: true,
               fitInsideHorizontally: true,
@@ -618,6 +619,9 @@ class _BudgetHistoryLineGraphState extends State<_BudgetHistoryLineGraph> {
                         data: MediaQuery.of(context)
                             .copyWith(textScaleFactor: 1.0),
                         child: TextFont(
+                          overflow: TextOverflow.fade,
+                          maxLines: 1,
+                          softWrap: false,
                           textAlign: TextAlign.center,
                           fontSize: 13,
                           text: widget.budget.reoccurrence ==
@@ -676,7 +680,10 @@ class _BudgetHistoryLineGraphState extends State<_BudgetHistoryLineGraph> {
                       data:
                           MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
                       child: TextFont(
-                        textAlign: TextAlign.right,
+                        overflow: TextOverflow.fade,
+                        maxLines: 1,
+                        softWrap: false,
+                        textAlign: TextAlign.end,
                         text: getWordedNumber(
                             context, Provider.of<AllWallets>(context), value),
                         textColor: dynamicPastel(context, widget.color,

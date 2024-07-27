@@ -8,11 +8,13 @@ import 'package:budget/pages/addWalletPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
 import 'package:budget/pages/premiumPage.dart';
+import 'package:budget/pages/settingsPage.dart';
 import 'package:budget/pages/sharedBudgetSettings.dart';
 import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/struct/settings.dart';
+import 'package:budget/struct/upcomingTransactionsFunctions.dart';
 import 'package:budget/struct/uploadAttachment.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/navigationFramework.dart';
@@ -397,6 +399,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     await SchedulerBinding.instance.endOfFrame;
 
     lockAddTransaction = false;
+    savingHapticFeedback();
     return result;
   }
 
@@ -1332,6 +1335,38 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                                     vertical: 0, horizontal: 5),
                               ),
                             ),
+                            Builder(builder: (context) {
+                              int? numberRepeats = widget.transaction
+                                          ?.createdAnotherFutureTransaction ==
+                                      true
+                                  ? null
+                                  : countTransactionOccurrences(
+                                      type: selectedType,
+                                      reoccurrence: selectedRecurrenceEnum,
+                                      periodLength: selectedPeriodLength,
+                                      dateCreated: selectedDate,
+                                      endDate: selectedEndDate,
+                                    );
+                              return AnimatedSizeSwitcher(
+                                child: numberRepeats != null
+                                    ? Padding(
+                                        padding: const EdgeInsetsDirectional
+                                            .symmetric(horizontal: 4),
+                                        child: TextFont(
+                                          key: ValueKey(1),
+                                          fontSize: 14.5,
+                                          textColor:
+                                              getColor(context, "textLight"),
+                                          text: "( ×" +
+                                              numberRepeats.toString() +
+                                              " )",
+                                        ),
+                                      )
+                                    : Container(
+                                        key: ValueKey(2),
+                                      ),
+                              );
+                            }),
                             AnimatedSizeSwitcher(
                               child: selectedEndDate != null
                                   ? Opacity(
@@ -1851,21 +1886,9 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                       type: ContextMenuButtonType.paste,
                       onPressed: () async {
                         ContextMenuController.removeAny();
-                        String? clipboardText =
-                            await readClipboard(showSnackbar: false);
-                        double? amount =
-                            getAmountFromString(clipboardText ?? "");
+                        double? amount = await readAmountFromClipboard();
                         if (amount != null) {
                           setSelectedAmount(amount, amount.toString());
-                          openSnackbar(
-                            SnackbarMessage(
-                              title: "pasted-from-clipboard".tr(),
-                              icon: appStateSettings["outlinedIcons"]
-                                  ? Icons.paste_outlined
-                                  : Icons.paste_rounded,
-                              timeout: Duration(milliseconds: 2500),
-                            ),
-                          );
                         }
                       },
                     ),
@@ -1890,7 +1913,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                                     selectedAmount.toString()),
                                 alignment: AlignmentDirectional.centerEnd,
                                 child: TextFont(
-                                  textAlign: TextAlign.right,
+                                  textAlign: TextAlign.end,
                                   text: convertToMoney(
                                     Provider.of<AllWallets>(context),
                                     selectedAmount ?? 0,
@@ -1930,7 +1953,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                                           selectedCategory?.name ?? ""),
                                       width: double.infinity,
                                       child: TextFont(
-                                        textAlign: TextAlign.right,
+                                        textAlign: TextAlign.end,
                                         fontSize: 18,
                                         text: selectedCategory?.name ?? "",
                                         maxLines: 2,
@@ -1942,7 +1965,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                                     child: Align(
                                       alignment: AlignmentDirectional.centerEnd,
                                       child: TextFont(
-                                        textAlign: TextAlign.right,
+                                        textAlign: TextAlign.end,
                                         text: convertToMoney(
                                           Provider.of<AllWallets>(context),
                                           (selectedAmount ?? 0) *
@@ -1992,196 +2015,191 @@ class _AddTransactionPageState extends State<AddTransactionPage>
         }
         return false;
       },
-      child: GestureDetector(
-        onTap: () {
-          minimizeKeyboard(context);
+      child: PageFramework(
+        belowAppBarPaddingWhenCenteredTitleSmall: 0,
+        resizeToAvoidBottomInset: true,
+        title: widget.transaction == null
+            ? isAddedToLoanObjective
+                ? "add-record".tr()
+                : "add-transaction".tr()
+            : isAddedToLoanObjective
+                ? "edit-record".tr()
+                : "edit-transaction".tr(),
+        dragDownToDismiss: true,
+        onBackButton: () async {
+          if (widget.transaction != null) {
+            discardChangesPopup(
+              context,
+              previousObject:
+                  await addDefaultMissingValues(widget.transaction!),
+              currentObject: await createTransaction(),
+            );
+          } else {
+            showDiscardChangesPopupIfNotEditing();
+          }
         },
-        child: PageFramework(
-          belowAppBarPaddingWhenCenteredTitleSmall: 0,
-          resizeToAvoidBottomInset: true,
-          title: widget.transaction == null
-              ? isAddedToLoanObjective
-                  ? "add-record".tr()
-                  : "add-transaction".tr()
-              : isAddedToLoanObjective
-                  ? "edit-record".tr()
-                  : "edit-transaction".tr(),
-          dragDownToDismiss: true,
-          onBackButton: () async {
-            if (widget.transaction != null) {
-              discardChangesPopup(
-                context,
-                previousObject:
-                    await addDefaultMissingValues(widget.transaction!),
-                currentObject: await createTransaction(),
-              );
-            } else {
-              showDiscardChangesPopupIfNotEditing();
-            }
-          },
-          onDragDownToDismiss: () async {
-            if (widget.transaction != null) {
-              discardChangesPopup(
-                context,
-                previousObject:
-                    await addDefaultMissingValues(widget.transaction!),
-                currentObject: await createTransaction(),
-              );
-            } else {
-              showDiscardChangesPopupIfNotEditing();
-            }
-          },
-          actions: [
-            widget.transaction != null
-                ? IconButton(
-                    padding: EdgeInsetsDirectional.all(15),
-                    tooltip: "delete-transaction".tr(),
-                    onPressed: () async {
-                      deleteTransactionPopup(
-                        context,
-                        transaction: widget.transaction!,
-                        category: selectedCategory,
-                        routesToPopAfterDelete: widget.routesToPopAfterDelete,
-                      );
-                    },
-                    icon: Icon(appStateSettings["outlinedIcons"]
-                        ? Icons.delete_outlined
-                        : Icons.delete_rounded),
-                  )
-                : SizedBox.shrink()
-          ],
-          overlay: MinimizeKeyboardFABOverlay(isEnabled: notesInputFocused),
-          staticOverlay: Align(
-            alignment: AlignmentDirectional.bottomCenter,
-            child: Row(
-              children: [
-                Expanded(
-                  child: selectedCategory == null
-                      ? SaveBottomButton(
-                          label: "select-category".tr(),
-                          onTap: () {
-                            selectCategorySequence(
-                              context,
-                              selectedCategory: selectedCategory,
-                              setSelectedCategory: setSelectedCategory,
-                              selectedSubCategory: selectedSubCategory,
-                              setSelectedSubCategory: setSelectedSubCategory,
-                              skipIfSet: false,
-                              selectedIncomeInitial: selectedIncome,
-                            );
-                          },
-                        )
-                      : selectedAmount == null
-                          ? SaveBottomButton(
-                              label: "enter-amount".tr(),
-                              onTap: () {
-                                selectAmountPopup();
-                              },
-                            )
-                          : SaveBottomButton(
+        onDragDownToDismiss: () async {
+          if (widget.transaction != null) {
+            discardChangesPopup(
+              context,
+              previousObject:
+                  await addDefaultMissingValues(widget.transaction!),
+              currentObject: await createTransaction(),
+            );
+          } else {
+            showDiscardChangesPopupIfNotEditing();
+          }
+        },
+        actions: [
+          widget.transaction != null
+              ? IconButton(
+                  padding: EdgeInsetsDirectional.all(15),
+                  tooltip: "delete-transaction".tr(),
+                  onPressed: () async {
+                    deleteTransactionPopup(
+                      context,
+                      transaction: widget.transaction!,
+                      category: selectedCategory,
+                      routesToPopAfterDelete: widget.routesToPopAfterDelete,
+                    );
+                  },
+                  icon: Icon(appStateSettings["outlinedIcons"]
+                      ? Icons.delete_outlined
+                      : Icons.delete_rounded),
+                )
+              : SizedBox.shrink()
+        ],
+        overlay: MinimizeKeyboardFABOverlay(isEnabled: notesInputFocused),
+        staticOverlay: Align(
+          alignment: AlignmentDirectional.bottomCenter,
+          child: Row(
+            children: [
+              Expanded(
+                child: selectedCategory == null
+                    ? SaveBottomButton(
+                        label: "select-category".tr(),
+                        onTap: () {
+                          selectCategorySequence(
+                            context,
+                            selectedCategory: selectedCategory,
+                            setSelectedCategory: setSelectedCategory,
+                            selectedSubCategory: selectedSubCategory,
+                            setSelectedSubCategory: setSelectedSubCategory,
+                            skipIfSet: false,
+                            selectedIncomeInitial: selectedIncome,
+                          );
+                        },
+                      )
+                    : selectedAmount == null
+                        ? SaveBottomButton(
+                            label: "enter-amount".tr(),
+                            onTap: () {
+                              selectAmountPopup();
+                            },
+                          )
+                        : SaveBottomButton(
+                            label: widget.transaction != null
+                                ? "save-changes".tr()
+                                : textAddTransaction ?? "",
+                            onTap: () async {
+                              bool result = await addTransaction();
+                              if (result) Navigator.of(context).pop();
+                            },
+                          ),
+              ),
+              AnimatedSizeSwitcher(
+                child: widget.transaction != null && selectedType != null
+                    ? WidgetSizeBuilder(
+                        // Change the key to re-render the widget when transaction type changed
+                        key: ValueKey(widget.transaction != null
+                            ? getTransactionActionNameFromType(
+                                    createTransaction())
+                                .tr()
+                            : ""),
+                        widgetBuilder: (Size? size) {
+                          return Container(
+                            key: ValueKey(1),
+                            width: size?.width,
+                            child: SaveBottomButton(
+                              margin: EdgeInsetsDirectional.only(start: 5),
+                              color: isTransactionActionDealtWith(
+                                      createTransaction())
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .tertiaryContainer
+                                  : null,
+                              labelColor: isTransactionActionDealtWith(
+                                      createTransaction())
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .onTertiaryContainer
+                                  : null,
                               label: widget.transaction != null
-                                  ? "save-changes".tr()
-                                  : textAddTransaction ?? "",
+                                  ? getTransactionActionNameFromType(
+                                          createTransaction())
+                                      .tr()
+                                  : "",
                               onTap: () async {
-                                bool result = await addTransaction();
-                                if (result) Navigator.of(context).pop();
+                                if (widget.transaction != null &&
+                                    selectedType != null) {
+                                  await openTransactionActionFromType(
+                                    context,
+                                    createTransaction(),
+                                    runBefore: () async {
+                                      await addTransaction();
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
+                                }
                               },
                             ),
-                ),
-                AnimatedSizeSwitcher(
-                  child: widget.transaction != null && selectedType != null
-                      ? WidgetSizeBuilder(
-                          // Change the key to re-render the widget when transaction type changed
-                          key: ValueKey(widget.transaction != null
-                              ? getTransactionActionNameFromType(
-                                      createTransaction())
-                                  .tr()
-                              : ""),
-                          widgetBuilder: (Size? size) {
-                            return Container(
-                              key: ValueKey(1),
-                              width: size?.width,
-                              child: SaveBottomButton(
-                                margin: EdgeInsetsDirectional.only(start: 5),
-                                color: isTransactionActionDealtWith(
-                                        createTransaction())
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .tertiaryContainer
-                                    : null,
-                                labelColor: isTransactionActionDealtWith(
-                                        createTransaction())
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .onTertiaryContainer
-                                    : null,
-                                label: widget.transaction != null
-                                    ? getTransactionActionNameFromType(
-                                            createTransaction())
-                                        .tr()
-                                    : "",
-                                onTap: () async {
-                                  if (widget.transaction != null &&
-                                      selectedType != null) {
-                                    await openTransactionActionFromType(
-                                      context,
-                                      createTransaction(),
-                                      runBefore: () async {
-                                        await addTransaction();
-                                        Navigator.of(context).pop();
-                                      },
-                                    );
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          key: ValueKey(2),
-                        ),
-                ),
-              ],
-            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        key: ValueKey(2),
+                      ),
+              ),
+            ],
           ),
-          listWidgets: [
-            enableDoubleColumn(context) == false
-                ? transactionAmountAndCategoryHeader
-                : SizedBox.shrink(),
-            enableDoubleColumn(context)
-                ? SizedBox(height: 50)
-                : SizedBox.shrink(),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                enableDoubleColumn(context) == false
-                    ? SizedBox.shrink()
-                    : Flexible(
-                        child: Container(
-                          constraints: BoxConstraints(maxWidth: 900),
-                          padding: const EdgeInsets.only(bottom: 80),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.symmetric(
-                                    horizontal: 13),
-                                child: ClipRRect(
-                                  child: transactionAmountAndCategoryHeader,
-                                  borderRadius:
-                                      BorderRadiusDirectional.circular(15),
-                                ),
+        ),
+        listWidgets: [
+          enableDoubleColumn(context) == false
+              ? transactionAmountAndCategoryHeader
+              : SizedBox.shrink(),
+          enableDoubleColumn(context)
+              ? SizedBox(height: 50)
+              : SizedBox.shrink(),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              enableDoubleColumn(context) == false
+                  ? SizedBox.shrink()
+                  : Flexible(
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 900),
+                        padding: const EdgeInsets.only(bottom: 80),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsetsDirectional.symmetric(
+                                  horizontal: 13),
+                              child: ClipRRect(
+                                child: transactionAmountAndCategoryHeader,
+                                borderRadius:
+                                    BorderRadiusDirectional.circular(15),
                               ),
-                              transactionTextInput,
-                            ],
-                          ),
+                            ),
+                            transactionTextInput,
+                          ],
                         ),
                       ),
-                transactionDetailsParameters,
-              ],
-            ),
-          ],
-        ),
+                    ),
+              transactionDetailsParameters,
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -3192,6 +3210,7 @@ class _SelectObjectiveState extends State<SelectObjective> {
                   },
                   extraWidgetAfter: SelectChipsAddButtonExtraWidget(
                     openPage: AddObjectivePage(
+                      objectiveType: widget.objectiveType,
                       routesToPopAfterDelete: RoutesToPopAfterDelete.One,
                     ),
                   ),
@@ -3286,7 +3305,7 @@ class _SelectExcludeBudgetState extends State<SelectExcludeBudget> {
                   TextFont(
                     text: "no-budgets-found".tr(),
                     fontSize: 15,
-                    textAlign: TextAlign.left,
+                    textAlign: TextAlign.start,
                   ),
                 ],
               ),
@@ -3678,8 +3697,10 @@ class SelectTransactionTypePopup extends StatelessWidget {
                     highlightActionButton: true,
                     useHorizontalPaddingConstrained: false,
                     openPage: Container(),
-                    containerColor:
-                        Theme.of(context).canvasColor.withOpacity(0.5),
+                    containerColor: Theme.of(context)
+                        .colorScheme
+                        .background
+                        .withOpacity(0.5),
                     transaction: Transaction(
                       transactionPk: "-1",
                       name: "",
@@ -4702,8 +4723,10 @@ class SelectSubcategoryChips extends StatelessWidget {
                       padding: padding,
                       child: SelectChips(
                         allowMultipleSelected: false,
-                        selectedColor:
-                            Theme.of(context).canvasColor.withOpacity(0.6),
+                        selectedColor: Theme.of(context)
+                            .colorScheme
+                            .background
+                            .withOpacity(0.6),
                         onLongPress: (category) {
                           pushRoute(
                             context,

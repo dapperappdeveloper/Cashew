@@ -221,8 +221,10 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_rounded,
                           onExtra: () async {
-                            Budget updatedBudget =
-                                budget.copyWith(archived: !budget.archived);
+                            Budget updatedBudget = budget.copyWith(
+                              archived: !budget.archived,
+                              pinned: budget.archived,
+                            );
                             await database.createOrUpdateBudget(updatedBudget);
                           },
                           opacity: budget.archived ? 0.5 : 1,
@@ -322,7 +324,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                         if (snapshot.hasData &&
                                             snapshot.data != null) {
                                           return TextFont(
-                                            textAlign: TextAlign.left,
+                                            textAlign: TextAlign.start,
                                             text: snapshot.data!.toString() +
                                                 " " +
                                                 (snapshot.data! == 1
@@ -339,7 +341,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                           );
                                         } else {
                                           return TextFont(
-                                            textAlign: TextAlign.left,
+                                            textAlign: TextAlign.start,
                                             text:
                                                 "/" + " " + "transactions".tr(),
                                             fontSize: 14,

@@ -6,6 +6,7 @@ import 'package:budget/pages/editBudgetPage.dart';
 import 'package:budget/pages/homePage/homePageAllSpendingSummary.dart';
 import 'package:budget/pages/homePage/homePageBudgets.dart';
 import 'package:budget/pages/homePage/homePageCreditDebts.dart';
+import 'package:budget/pages/homePage/homePageHeatmap.dart';
 import 'package:budget/pages/homePage/homePageLineGraph.dart';
 import 'package:budget/pages/homePage/homePageNetWorth.dart';
 import 'package:budget/pages/homePage/homePageObjectives.dart';
@@ -396,6 +397,9 @@ class _EditHomePageState extends State<EditHomePage> {
               switchHomeScreenSection(context, "showHeatMap", value);
             },
             extraWidgetsBelow: [],
+            onTap: () {
+              openHeatMapHomePageBottomSheetSettings(context);
+            },
           ),
           "transactionsList": EditHomePageItem(
             icon: navBarIconsData["transactions"]!.iconData,
@@ -442,17 +446,21 @@ class _EditHomePageState extends State<EditHomePage> {
         dragDownToDismiss: true,
         dragDownToDismissEnabled: dragDownToDismissEnabled,
         title: "edit-home".tr(),
-        subtitle: Padding(
-          padding: const EdgeInsetsDirectional.only(bottom: 5),
-          child: TextFont(
-            text: "tap-each-section-to-customize".tr(),
-            fontSize: 17,
-            maxLines: 2,
-          ),
-        ),
-        addExtraPaddingAfterCenteredSubtitle: 5,
+        subtitle: appStateSettings["showExtraInfoText"] == false
+            ? null
+            : Padding(
+                padding: const EdgeInsetsDirectional.only(bottom: 5),
+                child: TextFont(
+                  text: "tap-each-section-to-customize".tr(),
+                  fontSize: 17,
+                  maxLines: 2,
+                ),
+              ),
+        addExtraPaddingAfterCenteredSubtitle:
+            appStateSettings["showExtraInfoText"] == false ? null : 5,
         subtitleAlignment: AlignmentDirectional.bottomStart,
-        subtitleSize: 10,
+        subtitleSize:
+            appStateSettings["showExtraInfoText"] == false ? null : 10,
         slivers: [
           if (enableDoubleColumn(context))
             SliverToBoxAdapter(
@@ -631,7 +639,7 @@ class PanelSectionSeparator extends StatelessWidget {
             TextFont(
               text: "left-panel".tr(),
               fontSize: 16,
-              textAlign: TextAlign.left,
+              textAlign: TextAlign.start,
             ),
           Expanded(
               child: HorizontalBreak(
@@ -641,7 +649,7 @@ class PanelSectionSeparator extends StatelessWidget {
             TextFont(
               text: "top-center".tr(),
               fontSize: 16,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.end,
             ),
           if (orderKey == "ORDER:CENTER")
             Expanded(
@@ -652,7 +660,7 @@ class PanelSectionSeparator extends StatelessWidget {
             TextFont(
               text: "right-panel".tr(),
               fontSize: 16,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.end,
             ),
         ],
       ),
@@ -727,7 +735,7 @@ class _TransactionsListHomePageBottomSheetSettingsState
                     fontSize: getPlatform() == PlatformOS.isIOS ? 14 : 16,
                     textAlign: getPlatform() == PlatformOS.isIOS
                         ? TextAlign.center
-                        : TextAlign.left,
+                        : TextAlign.start,
                   ),
                 ),
                 SizedBox(height: 15),
@@ -806,6 +814,13 @@ Future openPieChartHomePageBottomSheetSettings(BuildContext context) async {
       //   ],
       // ),
     ),
+  );
+}
+
+Future openHeatMapHomePageBottomSheetSettings(BuildContext context) async {
+  await openBottomSheet(
+    context,
+    HomePageHeatMapSettings(),
   );
 }
 

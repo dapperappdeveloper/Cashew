@@ -64,10 +64,9 @@ class ObjectivePage extends StatelessWidget {
         stream: database.getObjective(objectivePk),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Color accentColor = HexColor(snapshot.data?.colour,
-                defaultColor: Theme.of(context).colorScheme.primary);
+            Color? accentColor = HexColor(snapshot.data?.colour);
             return CustomColorTheme(
-              accentColor: accentColor,
+              accentColor: snapshot.data?.colour == null ? null : accentColor,
               child: _ObjectivePageContent(
                 objective: snapshot.data!,
               ),
@@ -276,6 +275,7 @@ class _ObjectivePageContentState extends State<_ObjectivePageContent> {
               ),
             ],
             title: widget.objective.name,
+            capitalizeTitle: false,
             appBarBackgroundColor:
                 Theme.of(context).colorScheme.secondaryContainer,
             appBarBackgroundColorStart:

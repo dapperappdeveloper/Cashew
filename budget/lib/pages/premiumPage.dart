@@ -355,7 +355,7 @@ class _FreePremiumMessageState extends State<FreePremiumMessage> {
         TextFont(
             maxLines: 80,
             fontSize: 15.5,
-            textAlign: TextAlign.left,
+            textAlign: TextAlign.start,
             text: "developer-message-1".tr() +
                 (appStateSettings["premiumPopupFreeSeen"]
                     ? "."
@@ -364,7 +364,7 @@ class _FreePremiumMessageState extends State<FreePremiumMessage> {
         TextFont(
             maxLines: 80,
             fontSize: 15.5,
-            textAlign: TextAlign.left,
+            textAlign: TextAlign.start,
             text: "developer-message-2".tr()),
         SizedBox(height: 15),
         Row(
@@ -449,22 +449,32 @@ class CashewProBanner extends StatelessWidget {
           textColor: fontColor ?? Colors.black,
         ),
         SizedBox(width: 2),
-        Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 5),
-          padding: EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadiusDirectional.circular(100),
-            boxShadow: boxShadowGeneral(context),
-          ),
-          child: TextFont(
-            text: "Pro",
-            textColor: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: large ? 21 : 15,
-          ),
-        ),
+        TextPill(fontSize: large ? 21 : 15, text: "Pro"),
       ],
+    );
+  }
+}
+
+class TextPill extends StatelessWidget {
+  const TextPill({required this.text, required this.fontSize, super.key});
+  final String text;
+  final double fontSize;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsetsDirectional.symmetric(horizontal: 5),
+      padding: EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        borderRadius: BorderRadiusDirectional.circular(100),
+        boxShadow: boxShadowGeneral(context),
+      ),
+      child: TextFont(
+        text: text,
+        textColor: Theme.of(context).colorScheme.onPrimary,
+        fontWeight: FontWeight.bold,
+        fontSize: fontSize,
+      ),
     );
   }
 }

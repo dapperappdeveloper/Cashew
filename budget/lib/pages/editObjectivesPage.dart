@@ -193,8 +193,10 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
                               ? Icons.visibility_outlined
                               : Icons.visibility_rounded,
                       onExtra: () async {
-                        Objective updatedObjective =
-                            objective.copyWith(archived: !objective.archived);
+                        Objective updatedObjective = objective.copyWith(
+                          archived: !objective.archived,
+                          pinned: objective.archived,
+                        );
                         await database
                             .createOrUpdateObjective(updatedObjective);
                       },
@@ -238,7 +240,7 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
                                   fontSize: 19,
                                 ),
                                 TextFont(
-                                  textAlign: TextAlign.left,
+                                  textAlign: TextAlign.start,
                                   text: getIsDifferenceOnlyLoan(objective)
                                       ? "difference-loan".tr()
                                       : objective.income
@@ -288,7 +290,7 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
                                                     : "to-collect".tr())
                                             : "";
                                     return TextFont(
-                                      textAlign: TextAlign.left,
+                                      textAlign: TextAlign.start,
                                       text: getIsDifferenceOnlyLoan(objective)
                                           ? (amountSpentLabel +
                                               " " +
@@ -312,7 +314,7 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
                                 //     if (snapshot.hasData &&
                                 //         snapshot.data != null) {
                                 //       return TextFont(
-                                //         textAlign: TextAlign.left,
+                                //         textAlign: TextAlign.start,
                                 //         text: snapshot.data.toString() +
                                 //             " " +
                                 //             (snapshot.data == 1
@@ -329,7 +331,7 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
                                 //       );
                                 //     } else {
                                 //       return TextFont(
-                                //         textAlign: TextAlign.left,
+                                //         textAlign: TextAlign.start,
                                 //         text: "/ transactions",
                                 //         fontSize: 14,
                                 //         textColor:

@@ -1,55 +1,20 @@
 import 'dart:async';
-
 import 'package:budget/colors.dart';
-import 'package:budget/database/generatePreviewData.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addTransactionPage.dart';
-import 'package:budget/pages/homePage/homePageHeatmap.dart';
-import 'package:budget/pages/homePage/homePageLineGraph.dart';
-import 'package:budget/pages/homePage/homePageNetWorth.dart';
-import 'package:budget/pages/homePage/homePageObjectives.dart';
-import 'package:budget/pages/homePage/homePagePieChart.dart';
-import 'package:budget/pages/homePage/homePageWalletList.dart';
-import 'package:budget/pages/homePage/homePageWalletSwitcher.dart';
-import 'package:budget/pages/homePage/homeTransactions.dart';
-import 'package:budget/pages/homePage/homePageUsername.dart';
-import 'package:budget/pages/homePage/homePageBudgets.dart';
-import 'package:budget/pages/homePage/homePageUpcomingTransactions.dart';
-import 'package:budget/pages/homePage/homePageAllSpendingSummary.dart';
-import 'package:budget/pages/editHomePage.dart';
-import 'package:budget/pages/settingsPage.dart';
-import 'package:budget/pages/homePage/homePageCreditDebts.dart';
 import 'package:budget/pages/transactionFilters.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
-import 'package:budget/struct/initializeNotifications.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/widgets/animatedExpanded.dart';
-import 'package:budget/widgets/button.dart';
-import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
-import 'package:budget/widgets/ratingPopup.dart';
-import 'package:budget/widgets/selectedTransactionsAppBar.dart';
-import 'package:budget/widgets/util/debouncer.dart';
-import 'package:budget/widgets/util/keepAliveClientMixin.dart';
-import 'package:budget/widgets/textWidgets.dart';
-import 'package:budget/widgets/transactionEntry/swipeToSelectTransactions.dart';
-import 'package:budget/widgets/util/onAppResume.dart';
-import 'package:budget/widgets/viewAllTransactionsButton.dart';
-import 'package:budget/widgets/navigationSidebar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:budget/widgets/scrollbarWrap.dart';
-import 'package:budget/widgets/slidingSelectorIncomeExpense.dart';
-import 'package:budget/widgets/linearGradientFadedEdges.dart';
-import 'package:budget/widgets/pullDownToRefreshSync.dart';
-import 'package:budget/widgets/util/rightSideClipper.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/pages/addWalletPage.dart';
-import 'package:budget/widgets/util/checkWidgetLaunch.dart';
+import "package:budget/struct/throttler.dart";
 
 class AndroidOnly extends StatelessWidget {
   const AndroidOnly({required this.child, super.key});
@@ -69,26 +34,14 @@ class CheckWidgetLaunch extends StatefulWidget {
   State<CheckWidgetLaunch> createState() => _CheckWidgetLaunchState();
 }
 
-bool hasDoneWidgetAction = false;
+Throttler widgetActionThrottler =
+    Throttler(duration: Duration(milliseconds: 350));
 
 class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
-  Timer? cancelTimer;
-
   @override
   void initState() {
     super.initState();
     HomeWidget.setAppGroupId('WIDGET_GROUP_ID');
-  }
-
-  @override
-  void dispose() {
-    cancelTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     Future.delayed(Duration(milliseconds: 50), () {
       _checkForWidgetLaunch();
     });
@@ -103,17 +56,19 @@ class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
   // has this been fixed with: android:launchMode="singleInstance" ?
   void _launchedFromWidget(Uri? uri) async {
     // Only perform one widget action per launch/continue of the app
-    if (hasDoneWidgetAction == true) return;
-    hasDoneWidgetAction = true;
+    if (!widgetActionThrottler.canProceed()) return;
 
     String widgetPayload = (uri ?? "").toString();
     if (widgetPayload == "addTransactionWidget") {
-      pushRoute(
-        context,
-        AddTransactionPage(
-          routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-        ),
-      );
+      // Add a delay so the keyboard can focus
+      Future.delayed(Duration(milliseconds: 50), () {
+        pushRoute(
+          context,
+          AddTransactionPage(
+            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+          ),
+        );
+      });
     } else if (widgetPayload == "transferTransactionWidget") {
       // This fixes an issue on older versions of Android where the route would popup twice
       // We can detect when this is going to happen if the Provider is not yet loaded, so just pop
@@ -140,24 +95,11 @@ class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
         ),
       );
     }
-    _scheduleHasDoneWidgetAction();
-  }
-
-  void _scheduleHasDoneWidgetAction() {
-    cancelTimer = Timer(Duration(milliseconds: 3000), () {
-      hasDoneWidgetAction = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return OnAppResume(
-      onAppResume: () {
-        hasDoneWidgetAction = false;
-        cancelTimer?.cancel();
-      },
-      child: SizedBox.shrink(),
-    );
+    return SizedBox.shrink();
   }
 }
 

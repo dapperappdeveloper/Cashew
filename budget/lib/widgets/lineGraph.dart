@@ -198,6 +198,9 @@ class _LineChartState extends State<_LineChart> with WidgetsBindingObserver {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: TextFont(
+                    overflow: TextOverflow.fade,
+                    maxLines: 1,
+                    softWrap: false,
                     textAlign: TextAlign.center,
                     fontSize: 13,
                     text: text,
@@ -243,7 +246,10 @@ class _LineChartState extends State<_LineChart> with WidgetsBindingObserver {
                 child: MediaQuery(
                   data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
                   child: TextFont(
-                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.fade,
+                    maxLines: 1,
+                    softWrap: false,
+                    textAlign: TextAlign.end,
                     text: getWordedNumber(context,
                         Provider.of<AllWallets>(context, listen: false), value),
                     textColor: dynamicPastel(context, widget.color,
@@ -362,7 +368,7 @@ class _LineChartState extends State<_LineChart> with WidgetsBindingObserver {
           touchedValue = value.toInt();
         },
         touchTooltipData: LineTouchTooltipData(
-          tooltipBgColor: widget.color.withOpacity(0.7),
+          getTooltipColor: (_) => widget.color.withOpacity(0.7),
           tooltipRoundedRadius: 8,
           fitInsideVertically: true,
           fitInsideHorizontally: true,
